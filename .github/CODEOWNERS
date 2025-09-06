@@ -1,0 +1,7 @@
+# Default owners for the entire repository
+* @tu-usuario-github
+
+# Specific owners for critical paths
+/backend/src/auth/ @tu-usuario-github
+/backend/src/users/ @tu-usuario-github
+/frontend/src/components/ @tu-usuario-github

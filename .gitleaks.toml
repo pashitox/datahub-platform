@@ -1,0 +1,16 @@
+[allowlist]
+# Archivos permitidos que pueden contener secrets (solo desarrollo)
+[[allowlist.files]]
+file = ".env.example"
+
+[[allowlist.files]]
+file = "docker-compose.yml"
+
+# Patrones permitidos (para variables de ejemplo)
+[[allowlist.regexes]]
+description = "Sample credentials in docker-compose"
+regex = "changemeinprod"
+
+[[allowlist.regexes]] 
+description = "Sample JWT secrets in .env.example"
+regex = "mi_clave_secreta.*cambiar_en_produccion"
