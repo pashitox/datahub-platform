@@ -1,8 +1,24 @@
 version: '3.8'
 
 services:
+  # Reverse Proxy (Nginx)
+  proxy:
+    image: nginx:alpine
+    container_name: datahub-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./proxy/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./proxy/ssl:/etc/nginx/ssl:ro
+    networks:
+      - datahub-network
+    restart: unless-stopped
+
+  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
+    container_name: datahub-postgres
     environment:
       POSTGRES_DB: datahub
       POSTGRES_USER: admin
@@ -11,24 +27,33 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init-scripts:/docker-entrypoint-initdb.d
     networks:
       - datahub-network
+    restart: unless-stopped
 
+  # Redis for caching/sessions
   redis:
     image: redis:7-alpine
+    container_name: datahub-redis
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
       - datahub-network
+    restart: unless-stopped
 
+  # Backend Service
   backend:
     build: ./backend
+    container_name: datahub-backend
     ports:
-      - "3002:3002"
+      - "3001:3001"
     environment:
       - NODE_ENV=development
+      - DATABASE_URL=postgresql://admin:changemeinprod@postgres:5432/datahub
+      - REDIS_URL=redis://redis:6379
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -37,9 +62,12 @@ services:
       - redis
     networks:
       - datahub-network
+    restart: unless-stopped
 
+  # Frontend Service
   frontend:
     build: ./frontend
+    container_name: datahub-frontend
     ports:
       - "3000:3000"
     environment:
@@ -51,6 +79,7 @@ services:
       - backend
     networks:
       - datahub-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:

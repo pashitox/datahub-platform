@@ -18,7 +18,7 @@ async function bootstrap() {
     credentials: true,
   });
   
-  await app.listen(process.env.PORT || 3002);
+  await app.listen(process.env.PORT || 3001, '0.0.0.0');
   console.log(`🚀 Backend running on: ${await app.getUrl()}`);
 }
 bootstrap();
