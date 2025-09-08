@@ -2,7 +2,7 @@ FROM node:18-bullseye
 
 WORKDIR /app
 
-# Instalar Nest CLI globalmente
+# Instalar Nest CLI globalmente1
 RUN npm install -g @nestjs/cli
 
 COPY package*.json ./
