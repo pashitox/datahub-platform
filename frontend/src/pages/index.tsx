@@ -1,21 +1,28 @@
-import React from 'react';
+import { useEffect } from 'react'
+import { useRouter } from 'next/router'
+import Navbar from '../components/layout/Navbar'
 
-export default function HomePage() {
+export default function Home() {
+  const router = useRouter()
+
+  useEffect(() => {
+    // Redirigir al login por ahora
+    router.push('/login')
+  }, [router])
+
   return (
-    <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-      <h1>🚀 DataHub Platform</h1>
-      <p>¡Bienvenido a tu proyecto personal!</p>
-      <p>El backend está en: http://localhost:3001</p>
-      <p>El frontend está en: http://localhost:3001</p>
-      <div>
-        <h2>Estado de los servicios:</h2>
-        <ul>
-          <li>✅ PostgreSQL: Funcionando en puerto 5432</li>
-          <li>✅ Redis: Funcionando en puerto 6379</li>
-          <li>✅ Backend: Listo para desarrollo</li>
-          <li>✅ Frontend: Corriendo correctamente</li>
-        </ul>
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-200">
+      <Navbar />
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            DataHub Platform
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300">
+            Redirigiendo al login...
+          </p>
+        </div>
       </div>
     </div>
-  );
+  )
 }
