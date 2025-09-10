@@ -5,6 +5,7 @@ import { UsersService } from '../users/users.service';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Response } from 'express'; // ✅ Import necesario para loginWithCookie
 
 @Injectable()
 export class AuthService {
@@ -46,20 +47,62 @@ export class AuthService {
       expiresIn: '7d',
     });
 
-    // 🟢 Nueva lógica: establecer expiración en 7 días
     const refreshTokenExpires = new Date();
     refreshTokenExpires.setDate(refreshTokenExpires.getDate() + 7);
 
     await this.refreshTokenRepository.save({
       user: user,
       token: await bcrypt.hash(refreshToken, 10),
-      expiresAt: refreshTokenExpires, // Guardamos fecha de expiración
+      expiresAt: refreshTokenExpires,
       isActive: true,
     });
 
     return {
       accessToken,
       refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        roles: user.roles,
+      },
+    };
+  }
+
+  // ✅ NUEVA FUNCIÓN loginWithCookie
+  async loginWithCookie(user: any, response: Response) {
+    const payload = { email: user.email, sub: user.id, roles: user.roles };
+
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: '15m',
+      secret: process.env.JWT_ACCESS_SECRET,
+    });
+
+    const refreshToken = this.jwtService.sign(payload, {
+      expiresIn: '7d',
+      secret: process.env.JWT_REFRESH_SECRET,
+    });
+
+    const refreshTokenExpires = new Date();
+    refreshTokenExpires.setDate(refreshTokenExpires.getDate() + 7);
+
+    await this.refreshTokenRepository.save({
+      user: user,
+      token: await bcrypt.hash(refreshToken, 10),
+      expiresAt: refreshTokenExpires,
+      isActive: true,
+    });
+
+    response.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
+    });
+
+    return {
+      accessToken,
       user: {
         id: user.id,
         email: user.email,

@@ -1,9 +1,19 @@
-// backend/src/auth/auth.controller.ts
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  Get,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { Request, Response } from 'express';
+import * as crypto from 'crypto';
 
 @Controller('auth')
 export class AuthController {
@@ -31,5 +41,19 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async logout(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.logout(refreshTokenDto.refreshToken);
+  }
+
+  // ✅ NUEVA RUTA PARA CSRF TOKEN
+  @Get('csrf-token')
+  getCsrfToken(@Req() request: Request, @Res() response: Response) {
+    const csrfToken = crypto.randomBytes(32).toString('hex');
+
+    response.cookie('XSRF-TOKEN', csrfToken, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+
+    return response.json({ csrfToken });
   }
 }
