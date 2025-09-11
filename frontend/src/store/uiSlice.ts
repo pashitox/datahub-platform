@@ -1,4 +1,4 @@
-// frontend/src/store/uiSlice.ts
+// frontend/src/store/uiSlice.ts(ojo)
 import { createSlice } from '@reduxjs/toolkit'
 
 interface UIState {
