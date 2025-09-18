@@ -12,9 +12,12 @@ export class CreateUsersTable1725619200000 implements MigrationInterface {
         "firstName" VARCHAR(100),
         "lastName" VARCHAR(100),
         "isActive" BOOLEAN DEFAULT true,
+        roles text[] DEFAULT '{user}'::text[],
+        "isEmailVerified" BOOLEAN NOT NULL DEFAULT false,
+        "emailVerificationToken" VARCHAR(255),
         "createdAt" TIMESTAMP DEFAULT NOW(),
         "updatedAt" TIMESTAMP DEFAULT NOW()
-      )
+      );
     `);
   }
 

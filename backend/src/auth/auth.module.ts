@@ -9,13 +9,13 @@ import { RefreshToken } from './entities/refresh-token.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([RefreshToken]), // ← Esto hace que RefreshTokenRepository esté disponible
+    TypeOrmModule.forFeature([RefreshToken]),
     UsersModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get('JWT_ACCESS_SECRET'),
-        signOptions: { expiresIn: configService.get('JWT_ACCESS_EXPIRES_IN', '15m') },
+        secret: configService.get('JWT_SECRET'), // ← aquí usamos JWT_SECRET de tu .env
+        signOptions: { expiresIn: configService.get('JWT_EXPIRES_IN', '3600s') },
       }),
       inject: [ConfigService],
     }),

@@ -1,5 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm';
 import { Exclude } from 'class-transformer';
+import { RefreshToken } from '../auth/entities/refresh-token.entity';
 
 @Entity('users')
 export class User {
@@ -10,7 +18,7 @@ export class User {
   email: string;
 
   @Column()
-  @Exclude() // Excluir password de las respuestas JSON
+  @Exclude()
   password: string;
 
   @Column({ nullable: true })
@@ -25,9 +33,19 @@ export class User {
   @Column('text', { array: true, default: ['user'] })
   roles: string[];
 
+  @Column({ default: false })
+  isEmailVerified: boolean;
+
+ @Column({ nullable: true }) 
+  emailVerificationToken: string;
+
+
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany(() => RefreshToken, refreshToken => refreshToken.userId)
+  refreshTokens: RefreshToken[];
 }

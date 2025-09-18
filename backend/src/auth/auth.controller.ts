@@ -1,19 +1,9 @@
-import {
-  Controller,
-  Post,
-  Body,
-  HttpCode,
-  HttpStatus,
-  Get,
-  Req,
-  Res,
-} from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Get, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { Request, Response } from 'express';
-import * as crypto from 'crypto';
+import { LoginDto } from './dto/login.dto';
+import { Response } from 'express';
+import { JwtBasicGuard } from './guards/jwt-basic.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -31,29 +21,43 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
-  @Post('refresh')
+  @Get('verify-email')
+  async verifyEmail(@Query('token') token: string) {
+    const user = await this.authService['usersService'].findByVerificationToken(token);
+    if (!user) throw new Error('Invalid token');
+    await this.authService['usersService'].update(user.id, {
+      isEmailVerified: true,
+      emailVerificationToken: null,
+    });
+    return { message: 'Email verified successfully!' };
+  }
+
+  @Get('csrf-token')
   @HttpCode(HttpStatus.OK)
-  async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
-    return this.authService.refresh(refreshTokenDto.refreshToken);
+  getCsrfToken(@Req() req: any) {
+    return { csrfToken: req.csrfToken() };
+  }
+
+  @Get('me')
+  @UseGuards(JwtBasicGuard)
+  @HttpCode(HttpStatus.OK)
+  getProfile(@Req() req) {
+    return req.user;
   }
 
   @Post('logout')
+  @UseGuards(JwtBasicGuard)
   @HttpCode(HttpStatus.OK)
-  async logout(@Body() refreshTokenDto: RefreshTokenDto) {
-    return this.authService.logout(refreshTokenDto.refreshToken);
+  async logout(@Req() req, @Res({ passthrough: true }) res: Response) {
+    // Limpiar cookies
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token');
+    return { message: 'Logged out successfully' };
   }
 
-  // ✅ NUEVA RUTA PARA CSRF TOKEN
-  @Get('csrf-token')
-  getCsrfToken(@Req() request: Request, @Res() response: Response) {
-    const csrfToken = crypto.randomBytes(32).toString('hex');
-
-    response.cookie('XSRF-TOKEN', csrfToken, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-    });
-
-    return response.json({ csrfToken });
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(@Body() body: { refreshToken: string }) {
+    return this.authService.refresh(body.refreshToken);
   }
 }

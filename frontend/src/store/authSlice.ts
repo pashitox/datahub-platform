@@ -1,7 +1,15 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit"
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
+import { apiClient } from '../lib/api'
+
+interface User {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+}
 
 interface AuthState {
-  user: null | any
+  user: User | null
   token: string | null
   isAuthenticated: boolean
   isLoading: boolean
@@ -17,63 +25,127 @@ const initialState: AuthState = {
 }
 
 export const loginUser = createAsyncThunk(
-  "auth/login",
-  async (credentials: { email: string; password: string }) => {
-    console.log("🔄 Intentando login con:", credentials.email)
-    const response = await fetch("http://localhost:3001/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(credentials),
-      credentials: 'include',
-    })
-    
-    if (!response.ok) {
-      console.error("❌ Login failed:", response.status)
-      throw new Error("Login failed")
+  'auth/login',
+  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post('/auth/login', credentials)
+      return response
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Login failed')
     }
-    
-    const data = await response.json()
-    console.log("✅ Login exitoso:", data.user.email)
-    return data
+  }
+)
+
+export const logoutUser = createAsyncThunk(
+  'auth/logout',
+  async (_, { rejectWithValue }) => {
+    try {
+      await apiClient.post('/auth/logout')
+      return true
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Logout failed')
+    }
+  }
+)
+
+export const checkAuthStatus = createAsyncThunk(
+  'auth/checkStatus',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.get('/auth/me')
+      return response
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Authentication check failed')
+    }
   }
 )
 
 const authSlice = createSlice({
-  name: "auth",
+  name: 'auth',
   initialState,
   reducers: {
-    logout: (state) => {
-      state.user = null
-      state.token = null
-      state.isAuthenticated = false
-    },
     clearError: (state) => {
       state.error = null
+    },
+    setCredentials: (state, action: PayloadAction<{ user: User; token: string }>) => {
+      state.user = action.payload.user
+      state.token = action.payload.token
+      state.isAuthenticated = true
     },
   },
   extraReducers: (builder) => {
     builder
+      // Login
       .addCase(loginUser.pending, (state) => {
         state.isLoading = true
         state.error = null
-        console.log("⏳ Login pendiente...")
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false
         state.isAuthenticated = true
         state.user = action.payload.user
         state.token = action.payload.accessToken
-        console.log("🎉 Login completado, redirigiendo...")
-        // Redirigir al dashboard
-        // window.location.href = "/dashboard"
+        
+        // Guardar tokens en localStorage
+        localStorage.setItem('accessToken', action.payload.accessToken)
+        localStorage.setItem('refreshToken', action.payload.refreshToken)
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false
-        state.error = action.error.message || "Login failed"
-        console.error("💥 Login rechazado:", state.error)
+        state.isAuthenticated = false
+        state.error = action.payload as string
+        
+        // Limpiar tokens en caso de error
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+      })
+      
+      // Logout
+      .addCase(logoutUser.pending, (state) => {
+        state.isLoading = true
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.isLoading = false
+        state.isAuthenticated = false
+        state.user = null
+        state.token = null
+        state.error = null
+        
+        // Limpiar tokens
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload as string
+        // Forzar logout incluso si hay error
+        state.isAuthenticated = false
+        state.user = null
+        state.token = null
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+      })
+      
+      // Check Auth Status
+      .addCase(checkAuthStatus.pending, (state) => {
+        state.isLoading = true
+      })
+      .addCase(checkAuthStatus.fulfilled, (state, action) => {
+        state.isLoading = false
+        state.isAuthenticated = true
+        state.user = action.payload
+      })
+      .addCase(checkAuthStatus.rejected, (state, action) => {
+        state.isLoading = false
+        state.isAuthenticated = false
+        state.user = null
+        state.token = null
+        state.error = action.payload as string
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
       })
   },
 })
 
-export const { logout, clearError } = authSlice.actions
+export const { clearError, setCredentials } = authSlice.actions
 export default authSlice.reducer

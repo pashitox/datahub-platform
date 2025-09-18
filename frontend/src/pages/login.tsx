@@ -1,17 +1,29 @@
-// frontend/src/pages/login.tsx
-'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/router'
+import Link from 'next/link'
+import { Eye, EyeOff, Mail, LogIn } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
-import { Eye, EyeOff, Mail } from 'lucide-react'
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
-  const [credentials, setCredentials] = useState({ email: '', password: '' })
-  const { isLoading, error, loginUser } = useAuth()
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  })
+  const { login, isLoading, error, clearError } = useAuth()
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await loginUser(credentials)
+    clearError()
+    
+    try {
+      await login(formData)
+      router.push('/dashboard')
+    } catch (err) {
+      // El error ya está manejado por el slice
+      console.error('Login error:', err)
+    }
   }
 
   return (
@@ -19,7 +31,7 @@ export default function Login() {
       <div className="glass-effect dark:glass-effect-dark rounded-2xl p-8 shadow-2xl w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Mail className="text-white" size={32} />
+            <LogIn className="text-white" size={32} />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Welcome Back
@@ -29,23 +41,24 @@ export default function Login() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
-            </div>
-          )}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+          </div>
+        )}
 
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Email
             </label>
             <input
               type="email"
-              value={credentials.email}
-              onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
-              placeholder="Enter your email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+              placeholder="email@example.com"
+              required
             />
           </div>
 
@@ -56,10 +69,11 @@ export default function Login() {
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
-                value={credentials.password}
-                onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors pr-12"
-                placeholder="Enter your password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors pr-12"
+                placeholder="••••••••"
+                required
               />
               <button
                 type="button"
@@ -76,8 +90,17 @@ export default function Login() {
             disabled={isLoading}
             className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-primary-400 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
           >
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading ? 'Signing in...' : 'Sign in'}
           </button>
+
+          <div className="text-center">
+            <p className="text-gray-600 dark:text-gray-400">
+              Don't have an account?{' '}
+              <Link href="/register" className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
+                Sign up
+              </Link>
+            </p>
+          </div>
         </form>
       </div>
     </div>

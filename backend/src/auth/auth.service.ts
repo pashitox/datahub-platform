@@ -1,11 +1,12 @@
 import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt/dist/jwt.service'; // Ruta correcta para v11
+import { JwtService } from '@nestjs/jwt/dist/jwt.service';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Response } from 'express'; // ✅ Import necesario para loginWithCookie
+import { Response } from 'express';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -18,115 +19,90 @@ export class AuthService {
 
   async register(registerData: any) {
     const existingUser = await this.usersService.findByEmail(registerData.email);
-    if (existingUser) {
-      throw new ConflictException('User already exists');
-    }
+    if (existingUser) throw new ConflictException('This email is already registered');
 
     const hashedPassword = await bcrypt.hash(registerData.password, 10);
-    console.log("Password original:", registerData.password);
-    console.log("Password hasheado:", hashedPassword);
+    const emailToken = randomBytes(16).toString('hex');
+
     return this.usersService.create({
       ...registerData,
       password: hashedPassword,
+      isEmailVerified: false,
+      emailVerificationToken: emailToken,
     });
   }
 
   async login(loginData: any) {
     const user = await this.usersService.findByEmail(loginData.email);
-    if (!user || !await bcrypt.compare(loginData.password, user.password)) {
+    if (!user || !(await bcrypt.compare(loginData.password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { email: user.email, sub: user.id, roles: user.roles };
-    
-    const accessToken = this.jwtService.sign(payload, {
-      expiresIn: '15m',
-    });
+    if (!user.isEmailVerified) {
+      throw new UnauthorizedException('Email not verified');
+    }
 
-    const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: '7d',
-    });
+    const payload = { email: user.email, sub: user.id, roles: user.roles };
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
 
     const refreshTokenExpires = new Date();
     refreshTokenExpires.setDate(refreshTokenExpires.getDate() + 7);
 
     await this.refreshTokenRepository.save({
-      user: user,
+      user,
       token: await bcrypt.hash(refreshToken, 10),
       expiresAt: refreshTokenExpires,
       isActive: true,
     });
 
-    return {
-      accessToken,
-      refreshToken,
-      user: {
+    return { 
+      accessToken, 
+      refreshToken, 
+      user: { 
         id: user.id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        roles: user.roles,
-      },
-    };
-  }
-
-  // ✅ NUEVA FUNCIÓN loginWithCookie
-  async loginWithCookie(user: any, response: Response) {
-    const payload = { email: user.email, sub: user.id, roles: user.roles };
-
-    const accessToken = this.jwtService.sign(payload, {
-      expiresIn: '15m',
-      secret: process.env.JWT_ACCESS_SECRET,
-    });
-
-    const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: '7d',
-      secret: process.env.JWT_REFRESH_SECRET,
-    });
-
-    const refreshTokenExpires = new Date();
-    refreshTokenExpires.setDate(refreshTokenExpires.getDate() + 7);
-
-    await this.refreshTokenRepository.save({
-      user: user,
-      token: await bcrypt.hash(refreshToken, 10),
-      expiresAt: refreshTokenExpires,
-      isActive: true,
-    });
-
-    response.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
-    });
-
-    return {
-      accessToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        roles: user.roles,
-      },
+        roles: user.roles
+      } 
     };
   }
 
   async refresh(refreshToken: string) {
-    return { accessToken: 'new-token', refreshToken: 'new-refresh-token' };
+    try {
+      const payload = this.jwtService.verify(refreshToken);
+      const user = await this.usersService.findById(payload.sub);
+      
+      if (!user) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      const newPayload = { email: user.email, sub: user.id, roles: user.roles };
+      const newAccessToken = this.jwtService.sign(newPayload, { expiresIn: '15m' });
+      
+      return { 
+        accessToken: newAccessToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          roles: user.roles
+        }
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
   }
 
   async logout(refreshToken: string) {
-    return { message: 'Logged out successfully' };
-  }
-
-  async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.usersService.findByEmail(email);
-    if (user && await bcrypt.compare(password, user.password)) {
-      const { password, ...result } = user;
-      return result;
+    try {
+      const payload = this.jwtService.verify(refreshToken);
+      await this.refreshTokenRepository.delete({ user: { id: payload.sub } });
+      return { message: 'Logged out successfully' };
+    } catch (error) {
+      return { message: 'Logged out successfully' };
     }
-    return null;
   }
 }

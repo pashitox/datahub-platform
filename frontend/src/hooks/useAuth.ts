@@ -1,5 +1,5 @@
 import { useAppSelector, useAppDispatch } from '../store'
-import { loginUser, logout, clearError } from '../store/authSlice'
+import { loginUser, logoutUser, clearError, checkAuthStatus } from '../store/authSlice'
 
 export const useAuth = () => {
   const dispatch = useAppDispatch()
@@ -7,10 +7,10 @@ export const useAuth = () => {
   
   return {
     ...authState,
-    loginUser: (credentials: { email: string; password: string }) => 
+    login: (credentials: { email: string; password: string }) => 
       dispatch(loginUser(credentials)),
-    logout: () => dispatch(logout()),
-    clearError: () => dispatch(clearError())
+    logout: () => dispatch(logoutUser()),
+    clearError: () => dispatch(clearError()),
+    checkAuth: () => dispatch(checkAuthStatus())
   }
 }
-

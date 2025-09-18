@@ -8,5 +8,5 @@ export default {
   database: process.env.DATABASE_NAME || 'datahub',
   entities: [__dirname + '/**/*.entity{.ts,.js}'],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
-  synchronize: false,
+  synchronize: true,
 };

@@ -24,32 +24,22 @@ export class UsersService {
   }
 
   async findById(id: number): Promise<User> {
-    console.log('🔍 Buscando usuario con ID:', id, 'Tipo:', typeof id);
-    
-    if (isNaN(id)) {
-      console.log('⚠️  ID inválido (NaN), retornando null');
-      return null;
-    }
-    
+    if (isNaN(id)) return null;
     return this.usersRepository.findOne({ where: { id } });
   }
 
-  async update(id: number, updateData: Partial<User>): Promise<User> {
-    // 🟢 SOLUCIÓN: Validar ID antes de actualizar
-    if (isNaN(id)) {
-      console.log('❌ No se puede actualizar: ID inválido');
-      throw new Error('ID de usuario inválido');
-    }
-    
-    await this.usersRepository.update(id, updateData);
+  async update(id: number, data: Partial<User>): Promise<User> {
+    if (isNaN(id)) throw new Error('ID inválido');
+    await this.usersRepository.update(id, data);
     return this.findById(id);
   }
 
   async delete(id: number): Promise<void> {
-    if (isNaN(id)) {
-      console.log('❌ No se puede eliminar: ID inválido');
-      return;
-    }
+    if (!id || isNaN(id)) return;
     await this.usersRepository.delete(id);
+  }
+
+  async findByVerificationToken(token: string) {
+    return this.usersRepository.findOne({ where: { emailVerificationToken: token } });
   }
 }
