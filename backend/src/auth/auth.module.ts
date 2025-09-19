@@ -8,20 +8,8 @@ import { UsersModule } from '../users/users.module';
 import { RefreshToken } from './entities/refresh-token.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([RefreshToken]),
-    UsersModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET'), // ← aquí usamos JWT_SECRET de tu .env
-        signOptions: { expiresIn: configService.get('JWT_EXPIRES_IN', '3600s') },
-      }),
-      inject: [ConfigService],
-    }),
-  ],
+  imports: [UsersModule],
   providers: [AuthService],
   controllers: [AuthController],
-  exports: [AuthService],
 })
 export class AuthModule {}

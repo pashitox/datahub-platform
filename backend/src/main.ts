@@ -32,21 +32,23 @@ async function bootstrap() {
   app.use(cookieParser());
   
   // Configuración CSRF
-  app.use(csurf({
-    cookie: {
-      httpOnly: true,
-      sameSite: "strict",
-      secure: process.env.NODE_ENV === "production"
-    }
-  }));
+  
+  
+  //app.use(csurf({
+  //  cookie: {
+  //    httpOnly: true,
+  //    sameSite: "strict",
+  //    secure: process.env.NODE_ENV === "production"
+  //  }
+  //}));
 
   // Manejo de errores CSRF
-  app.use((err: any, req: any, res: any, next: any) => {
-    if (err.code === "EBADCSRFTOKEN") {
-      return res.status(403).json({ message: "Invalid CSRF token" });
-    }
-    next(err);
-  });
+  //app.use((err: any, req: any, res: any, next: any) => {
+  //  if (err.code === "EBADCSRFTOKEN") {
+  //    return res.status(403).json({ message: "Invalid CSRF token" });
+   //  }
+  //  next(err);
+  //});
   
   // Configuración global de validación
   app.useGlobalPipes(new ValidationPipe({

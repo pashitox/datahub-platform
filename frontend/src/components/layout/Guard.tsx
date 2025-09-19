@@ -1,50 +1,33 @@
-import { useEffect } from 'react'
-import { useRouter } from 'next/router'
-import { useAuth } from '../../hooks/useAuth'
+'use client'
+import { ReactNode, useEffect } from "react"
+import { useRouter } from "next/router"
+import { useAuth } from "@/hooks/useAuth"
 
 interface GuardProps {
-  children: React.ReactNode
-  requireAuth?: boolean
+  children: ReactNode
+  roles?: string[]
 }
 
-export default function Guard({ children, requireAuth = true }: GuardProps) {
-  const { isAuthenticated, isLoading, checkAuth } = useAuth()
+export default function Guard({ children, roles }: GuardProps) {
+  const { isAuthenticated, user, isLoading } = useAuth()
   const router = useRouter()
 
-  // 🔐 Verificar token en localStorage además del estado Redux
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken')
-    if (token && !isAuthenticated) {
-      checkAuth()
-    }
-  }, [])
-
   useEffect(() => {
     if (!isLoading) {
-      checkAuth()
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!isLoading) {
-      if (requireAuth && !isAuthenticated) {
-        router.push('/login')
-      } else if (!requireAuth && isAuthenticated) {
-        router.push('/dashboard')
+      if (!isAuthenticated) {
+        router.push("/login")
+      } else if (roles && !roles.includes(user?.role)) {
+        router.push("/access-denied")
       }
     }
-  }, [isAuthenticated, isLoading, requireAuth, router])
+  }, [isAuthenticated, isLoading, user, roles, router])
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-600 dark:text-gray-300">Cargando...</p>
       </div>
     )
-  }
-
-  if ((requireAuth && !isAuthenticated) || (!requireAuth && isAuthenticated)) {
-    return null
   }
 
   return <>{children}</>

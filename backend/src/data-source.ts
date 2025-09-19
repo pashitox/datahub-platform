@@ -1,5 +1,7 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
+import { User } from './users/entities/user.entity';
+import { RefreshToken } from './auth/entities/refresh-token.entity';
 import { CreateUsersTable1725619200000 } from './migrations/1725619200000-CreateUsersTable';
 import { CreateRefreshTokensTable1725621000000 } from './migrations/1725621000000-CreateRefreshTokensTable';
 import { AddEmailVerification1757934549976 } from './migrations/1757934549976-AddEmailVerification';
@@ -13,14 +15,11 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME || 'datahub',
   synchronize: false,
   logging: true,
-  entities: [],
+  entities: [User, RefreshToken], // ✅ AGREGAR ENTIDADES AQUÍ
   migrations: [
     CreateUsersTable1725619200000,
     CreateRefreshTokensTable1725621000000,
     AddEmailVerification1757934549976
   ],
+  migrationsRun: true, // ✅ EJECUTAR MIGRACIONES AUTOMÁTICAMENTE
 });
-
-AppDataSource.initialize()
-  .then(() => console.log('Data Source initialized'))
-  .catch((err) => console.error('Error during Data Source initialization', err));

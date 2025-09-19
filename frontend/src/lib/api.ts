@@ -1,5 +1,3 @@
-import { csrfProtection } from './csrf';
-
 class ApiClient {
   private baseURL: string;
 
@@ -31,33 +29,20 @@ class ApiClient {
   private async refreshAuthToken(): Promise<string | null> {
     try {
       const refreshToken = this.getRefreshToken();
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
-      }
-
-      // Obtener nuevo token CSRF primero
-      await csrfProtection.initialize();
-      const csrfToken = csrfProtection.getToken();
+      if (!refreshToken) throw new Error('No refresh token available');
 
       const response = await fetch(`${this.baseURL}/auth/refresh`, {
         method: 'POST',
         credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken }),
       });
 
-      if (!response.ok) {
-        throw new Error('Refresh token failed');
-      }
+      if (!response.ok) throw new Error('Refresh token failed');
 
       const data = await response.json();
       this.setAccessToken(data.accessToken);
-      if (data.refreshToken) {
-        this.setRefreshToken(data.refreshToken);
-      }
+      if (data.refreshToken) this.setRefreshToken(data.refreshToken);
       return data.accessToken;
     } catch (error) {
       console.error('Refresh token failed:', error);
@@ -69,84 +54,50 @@ class ApiClient {
 
   async request(endpoint: string, options: RequestInit = {}, isRetry = false): Promise<any> {
     const url = `${this.baseURL}${endpoint}`;
-    
-    // Asegurar que tenemos token CSRF
-    if (!csrfProtection.getToken()) {
-      await csrfProtection.initialize();
-    }
-    
-    const csrfToken = csrfProtection.getToken();
 
     const config: RequestInit = {
       ...options,
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
-        ...options.headers,
-      },
+      headers: { 'Content-Type': 'application/json', ...options.headers },
     };
 
-    // Solo agregar Authorization para endpoints que no sean de auth
     const accessToken = this.getAccessToken();
     if (accessToken && !endpoint.includes('/auth/')) {
-      config.headers = {
-        ...config.headers,
-        'Authorization': `Bearer ${accessToken}`,
-      };
+      config.headers = { ...config.headers, 'Authorization': `Bearer ${accessToken}` };
     }
 
     try {
       const response = await fetch(url, config);
+      const data = await response.json().catch(() => null);
 
-      // Manejar 401 - Token expirado
+      // ⚡ Refresh token
       if (response.status === 401 && accessToken && !isRetry) {
         const newAccessToken = await this.refreshAuthToken();
         if (newAccessToken) {
-          // Reintentar una sola vez
           return this.request(endpoint, {
             ...options,
-            headers: {
-              ...options.headers,
-              'Authorization': `Bearer ${newAccessToken}`,
-            },
+            headers: { ...options.headers, 'Authorization': `Bearer ${newAccessToken}` },
           }, true);
         }
         return null;
       }
 
+      // ⚡ Devuelve el mensaje del error sin lanzar excepción
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        return { error: data?.message || `HTTP error! status: ${response.status}` };
       }
 
-      return response.json();
-    } catch (error) {
+      return data;
+    } catch (error: any) {
       console.error('API request failed:', error);
-      throw error;
+      return { error: error.message || 'Unknown error' };
     }
   }
 
-  get(endpoint: string) {
-    return this.request(endpoint, { method: 'GET' });
-  }
-
-  post(endpoint: string, data?: any) {
-    return this.request(endpoint, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  put(endpoint: string, data?: any) {
-    return this.request(endpoint, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-  }
-
-  delete(endpoint: string) {
-    return this.request(endpoint, { method: 'DELETE' });
-  }
+  get(endpoint: string) { return this.request(endpoint, { method: 'GET' }); }
+  post(endpoint: string, data?: any) { return this.request(endpoint, { method: 'POST', body: JSON.stringify(data) }); }
+  put(endpoint: string, data?: any) { return this.request(endpoint, { method: 'PUT', body: JSON.stringify(data) }); }
+  delete(endpoint: string) { return this.request(endpoint, { method: 'DELETE' }); }
 }
 
 export const apiClient = new ApiClient();

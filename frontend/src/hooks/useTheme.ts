@@ -1,12 +1,28 @@
-// frontend/src/hooks/useTheme.ts
-import { useAppSelector, useAppDispatch } from '../store';
-import { toggleTheme } from '../store/uiSlice';
+"use client"
+import { useEffect, useState } from "react"
 
-export const useTheme = () => {
-  const dispatch = useAppDispatch();
-  const { isDarkMode } = useAppSelector((state) => state.ui);
-  
-  const toggle = () => dispatch(toggleTheme());
-  
-  return { isDarkMode, toggle };
-};
+export function useTheme() {
+  const [isDarkMode, setIsDarkMode] = useState(false)
+
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("theme")
+    if (storedTheme === "dark") {
+      setIsDarkMode(true)
+      document.documentElement.classList.add("dark")
+    }
+  }, [])
+
+  const toggle = () => {
+    if (isDarkMode) {
+      document.documentElement.classList.remove("dark")
+      localStorage.setItem("theme", "light")
+      setIsDarkMode(false)
+    } else {
+      document.documentElement.classList.add("dark")
+      localStorage.setItem("theme", "dark")
+      setIsDarkMode(true)
+    }
+  }
+
+  return { isDarkMode, toggle }
+}
