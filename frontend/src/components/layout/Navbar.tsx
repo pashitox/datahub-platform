@@ -3,13 +3,12 @@ import { useState } from "react"
 import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
 import { Moon, Sun, LogOut, User, Settings, Bell, Menu, X } from "lucide-react"
+import { useTheme } from "@/hooks/useTheme"
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { isAuthenticated, user, logout } = useAuth()
-  const [isDarkMode, setIsDarkMode] = useState(false)
-
-  const toggle = () => setIsDarkMode(!isDarkMode)
+  const { isDarkMode, toggle } = useTheme() // <--- aquí usamos el hook
 
   return (
     <nav className="bg-white dark:bg-dark-200 shadow-sm border-b border-gray-200 dark:border-dark-100">
