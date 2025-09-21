@@ -2,155 +2,190 @@
 
 ---
 
-```markdown
 # 🟢 DataHub Personal – Portfolio + AI Knowledge Platform
 
-<p align="center">
+<p align="left">
   <a href="https://nextjs.org/">
-    <img src="https://img.shields.io/badge/Next.js-14-black?logo=next.js&logoColor=white" alt="Next.js" height="30"/>
+    <img alt="Next.js" src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white">
   </a>
   <a href="https://nestjs.com/">
-    <img src="https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs&logoColor=white" alt="NestJS" height="30"/>
+    <img alt="NestJS" src="https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white">
   </a>
   <a href="https://www.typescriptlang.org/">
-    <img src="https://img.shields.io/badge/TypeScript-4.9-blue?logo=typescript&logoColor=white" alt="TypeScript" height="30"/>
-  </a>
-  <a href="https://www.docker.com/">
-    <img src="https://img.shields.io/badge/Docker-20-blue?logo=docker&logoColor=white" alt="Docker" height="30"/>
-  </a>
-  <a href="https://www.postgresql.org/">
-    <img src="https://img.shields.io/badge/PostgreSQL-15-blue?logo=postgresql&logoColor=white" alt="PostgreSQL" height="30"/>
-  </a>
-  <a href="https://redis.io/">
-    <img src="https://img.shields.io/badge/Redis-7-red?logo=redis&logoColor=white" alt="Redis" height="30"/>
+    <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white">
   </a>
   <a href="https://tailwindcss.com/">
-    <img src="https://img.shields.io/badge/TailwindCSS-3-blue?logo=tailwind-css&logoColor=white" alt="Tailwind CSS" height="30"/>
+    <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind%20CSS-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white">
   </a>
-  <a href="https://www.framer.com/motion/">
-    <img src="https://img.shields.io/badge/FramerMotion-6-purple?logo=framer&logoColor=white" alt="Framer Motion" height="30"/>
+  <a href="https://www.postgresql.org/">
+    <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white">
+  </a>
+  <a href="https://redis.io/">
+    <img alt="Redis" src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white">
+  </a>
+  <a href="https://www.docker.com/">
+    <img alt="Docker" src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white">
   </a>
 </p>
 
 ---
 
-## 📌 Overview
+## 📌 Description
 
-**DataHub** is a full-stack platform combining a **personal portfolio** with an **AI knowledge system**.  
-It demonstrates:
+DataHub is a **full-stack portfolio + AI knowledge platform** that demonstrates:
 
-* Functional authentication (login/logout, JWT)
-* Session handling and protected routes
-* Responsive UI with **dark mode**
-* Smooth animations with **Framer Motion**
-* Fully functional backend + frontend integration  
+* Functional login/logout with JWT & refresh tokens
+* Protected frontend routes
+* Responsive UI with **dark mode toggle**
+* Session management via `useAuth` hook
+* API wrapper (`api.ts`) handling refresh tokens
 
-> ⚠️ Note: Advanced security features like full RBAC, 2FA, and httpOnly cookies are **not implemented**.
+> ⚠️ Advanced security (roles, httpOnly cookies, 2FA) is **not yet implemented**, but this is the **final functional version**.
 
 ---
 
 ## 🗂️ Project Structure
 
-```
-
+```text
 datahub-platform/
-├── backend/                     # NestJS + TypeORM API
+├── backend/
 │   ├── src/
-│   │   ├── auth/                # Login, logout, refresh token
+│   │   ├── auth/                # Login/Logout, refresh token, JWT
 │   │   ├── common/              # Guards, filters, interceptors
-│   │   ├── config/              # CORS, JWT, other configs
+│   │   ├── config/              # JWT, CORS
 │   │   └── main.ts
 │   ├── Dockerfile
 │   └── package.json
-├── frontend/                    # Next.js 14 + Tailwind
+├── frontend/
 │   ├── src/
+│   │   ├── components/          # Navbar, Footer, Guard
 │   │   ├── hooks/               # useAuth, useTheme
 │   │   ├── lib/                 # api.ts, csrf.ts, seo.ts
-│   │   ├── pages/               # login, register, dashboard
-│   │   └── components/          # Navbar, Footer, Guard
+│   │   └── pages/               # login, register, dashboard
 │   ├── Dockerfile
 │   └── package.json
 ├── docker-compose.yml
 ├── .env.example
 └── README.md
-
-````
-
----
-
-## ⚙️ Features
-
-### Backend (NestJS)
-
-* JWT login/logout
-* Refresh token endpoint (`/auth/refresh`)
-* Protected routes with Guards
-* Validation using `ValidationPipe`
-* Structured JSON logging
-
-### Frontend (Next.js + Tailwind + Framer Motion)
-
-* Functional login/logout
-* Dark mode via `useTheme` hook
-* Session state via `useAuth`
-* Protected pages and navigation
-* API wrapper with automatic refresh token handling
-* Responsive UI + smooth animations
+```
 
 ---
 
-## 💻 Run the Project
+## ⚙️ Implemented Features
+
+### Backend (NestJS + TypeORM)
+
+* ✅ Login & logout endpoints
+* ✅ Refresh token endpoint (`/auth/refresh`)
+* ✅ JWT-based route protection
+* ✅ Basic validation with `ValidationPipe`
+* ✅ JSON structured logs
+
+### Frontend (Next.js 14 + Tailwind CSS)
+
+* ✅ Login/logout functionality
+* ✅ Session state management with `useAuth`
+* ✅ Protected routes using `Guard`
+* ✅ Dark mode toggle with `useTheme`
+* ✅ API wrapper handling token refresh
+* ✅ Responsive pages
+
+---
+
+## 🔄 User Flow Diagram
+
+```mermaid
+flowchart TD
+    A[User] -->|Login/Register| B[Frontend - Next.js]
+    B -->|POST /auth/login| C[Backend - NestJS]
+    C -->|Return JWT + Refresh Token| B
+    B -->|Store tokens| D[useAuth Hook]
+    B -->|Protected Route| E[Guard Component]
+    E -->|Access Granted| F[Dashboard / Protected Pages]
+    C --> G[PostgreSQL / Redis]
+    G --> C
+    B -->|API Request| C
+```
+
+---
+
+## 🏗️ Architecture Diagram
+
+```mermaid
+graph TD
+    subgraph Frontend
+        A[Next.js 14] -->|API calls| B[API Client]
+        B --> C[Guard + Pages]
+        A --> D[Hooks: useAuth / useTheme]
+    end
+
+    subgraph Backend
+        E[NestJS + TypeORM]
+        F[Auth Module] -->|JWT & Refresh| E
+        G[Common Module] -->|Guards/Interceptors| E
+        H[Config Module] -->|CORS/JWT| E
+    end
+
+    subgraph Database
+        I[PostgreSQL 15] 
+        J[Redis 7]
+    end
+
+    Frontend -->|Requests| Backend
+    Backend -->|Reads/Writes| Database
+```
+
+> This diagram shows **frontend, backend, database, Redis, and internal modules**, illustrating the full architecture.
+
+---
+
+## 💻 How to Run
 
 ### Requirements
 
 * Docker 20+ / Docker Compose 2+
 * Node.js 18+
-* PostgreSQL 15 (Docker)
-* Redis 7 (Docker)
 
 ### Start Services
 
 ```bash
 docker compose up -d
-````
+```
 
-### Quick Check
+### Quick Access
 
-* Backend: [http://localhost:3001](http://localhost:3001)
 * Frontend: [http://localhost:3000](http://localhost:3000)
-* Database: localhost:5432
-* Redis: localhost:6379
+* Backend: [http://localhost:3001](http://localhost:3001)
+* PostgreSQL: port `5432`
+* Redis: port `6379`
+
+---
+
+## 🔧 Technologies Used
+
+| Frontend     | Backend          | Database      | DevOps                  |
+| ------------ | ---------------- | ------------- | ----------------------- |
+| Next.js 14   | NestJS           | PostgreSQL 15 | Docker + Docker Compose |
+| TypeScript   | TypeORM          | Redis 7       | ESLint + Prettier       |
+| Tailwind CSS | JWT              |               | GitHub Actions          |
+| React Hooks  | Class Validators |               |                         |
 
 ---
 
 ## 🔑 Notes
 
-* Fully functional as-is
-* Dark mode, login/logout, and protected routes work
-* Advanced security (RBAC, httpOnly cookies, 2FA) **not implemented**
-* README reflects the **current project state**
+* Project is **final as-is**, ready for deployment.
+* Core features: login/logout, protected pages, dark mode ✅
+* Advanced security features not included ⚠️
 
 ---
+
+## 📸 Visual Preview
 
 <p align="center">
-  <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-14-black?logo=next.js" width="120"/></a>
-  <a href="https://nestjs.com/"><img src="https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs" width="120"/></a>
-  <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-20-blue?logo=docker" width="120"/></a>
-  <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/PostgreSQL-15-blue?logo=postgresql" width="120"/></a>
-  <a href="https://redis.io/"><img src="https://img.shields.io/badge/Redis-7-red?logo=redis" width="120"/></a>
-  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/TailwindCSS-3-blue?logo=tailwind-css" width="120"/></a>
-  <a href="https://www.framer.com/motion/"><img src="https://img.shields.io/badge/FramerMotion-6-purple?logo=framer&logoColor=white" width="120"/></a>
+  <img src="YOUR_IMAGE_URL_HERE" width="400">
+  <p align="center"><i>Insert your dashboard or project screenshot here</i></p>
 </p>
-```
 
 ---
 
-Si quieres, puedo hacer **una versión aún más profesional**, con:
-
-* **Sección de badges por columnas** para que no se vean amontonados
-* **Capturas de pantalla del frontend**
-* **Sección “Tech Stack” con logos grandes y bien organizados**
-
-Esto daría un README que parece un proyecto de empresa.
-
-¿Quieres que haga esa versión final?
