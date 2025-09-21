@@ -182,10 +182,7 @@ docker compose up -d
 
 ## 📸 Visual Preview
 
-<p align="center">
-  <img src="YOUR_IMAGE_URL_HERE" width="400">
-  <p align="center"><i>Insert your dashboard or project screenshot here</i></p>
-</p>
+<img width="1918" height="750" alt="Captura desde 2025-09-21 09-23-49" src="https://github.com/user-attachments/assets/7eba3c9c-8168-4911-b8d5-e44f2cedf21d" />
 
 ---
 
